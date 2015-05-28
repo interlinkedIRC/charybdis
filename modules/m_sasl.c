@@ -126,10 +126,25 @@ m_authenticate(struct Client *client_p, struct Client *source_p,
 					me.id, saslserv_p->servptr->name, source_p->id, saslserv_p->id,
 					source_p->host, source_p->sockhost);
 
-		if (!strcmp(parv[1], "EXTERNAL") && source_p->certfp != NULL)
-			sendto_one(saslserv_p, ":%s ENCAP %s SASL %s %s S %s %s",
-						me.id, saslserv_p->servptr->name, source_p->id, saslserv_p->id,
-						parv[1], source_p->certfp);
+		if (!strcmp(parv[1], "EXTERNAL"))
+		{
+			/* Send two messages, one for each type
+			 * XXX - can older services handle this?
+			 */
+			if (source_p->certfp_sha1 != NULL)
+			{
+				sendto_one(saslserv_p, ":%s ENCAP %s SASL %s %s S %s %s",
+							me.id, saslserv_p->servptr->name, source_p->id, saslserv_p->id,
+							parv[1], source_p->certfp_sha1);
+			}
+
+			if (source_p->certfp_sha256 != NULL)
+			{
+				sendto_one(saslserv_p, ":%s ENCAP %s SASL %s %s S %s %s",
+							me.id, saslserv_p->servptr->name, source_p->id, saslserv_p->id,
+							parv[1], source_p->certfp_sha256);
+			}
+		}
 		else
 			sendto_one(saslserv_p, ":%s ENCAP %s SASL %s %s S %s",
 						me.id, saslserv_p->servptr->name, source_p->id, saslserv_p->id,

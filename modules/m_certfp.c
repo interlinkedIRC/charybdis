@@ -39,13 +39,20 @@
 #include "modules.h"
 
 static int me_certfp(struct Client *, struct Client *, int, const char **);
+static int me_ecertfp(struct Client *, struct Client *, int, const char **);
 
 struct Message certfp_msgtab = {
 	"CERTFP", 0, 0, 0, MFLG_SLOW,
 	{mg_unreg, mg_ignore, mg_ignore, mg_ignore, {me_certfp, 2}, mg_ignore}
 };
 
-mapi_clist_av1 certfp_clist[] = { &certfp_msgtab, NULL };
+struct Message ecertfp_msgtab = {
+	"ECERTFP", 0, 0, 0, MFLG_SLOW,
+	{mg_unreg, mg_ignore, mg_ignore, mg_ignore, {me_ecertfp, 3}, mg_ignore}
+};
+
+
+mapi_clist_av1 certfp_clist[] = { &certfp_msgtab, &ecertfp_msgtab, NULL };
 
 DECLARE_MODULE_AV1(certfp, NULL, NULL, certfp_clist, NULL, NULL, "$Revision$");
 
@@ -59,9 +66,39 @@ me_certfp(struct Client *client_p, struct Client *source_p, int parc, const char
 	if (!IsPerson(source_p))
 		return 0;
 
-	rb_free(source_p->certfp);
-	source_p->certfp = NULL;
+	rb_free(source_p->certfp_sha1);
+	source_p->certfp_sha1 = NULL;
 	if (!EmptyString(parv[1]))
-		source_p->certfp = rb_strdup(parv[1]);
+		source_p->certfp_sha1 = rb_strdup(parv[1]);
 	return 0;
 }
+
+/*
+** me_ecertfp
+**      parv[1] = hash type
+**	parv[2] = certfp string
+*/
+static int
+me_ecertfp(struct Client *client_p, struct Client *source_p, int parc, const char *parv[])
+{
+	if (!IsPerson(source_p))
+		return 0;
+
+	if(strcasecmp(parv[1], "SHA256") == 0)
+	{
+		rb_free(source_p->certfp_sha256);
+		source_p->certfp_sha256 = NULL;
+		if (!EmptyString(parv[2]))
+			source_p->certfp_sha256 = rb_strdup(parv[2]);
+	}
+	else if(strcasecmp(parv[1], "SHA1") == 0)
+	{
+		rb_free(source_p->certfp_sha1);
+		source_p->certfp_sha1 = NULL;
+		if (!EmptyString(parv[2]))
+			source_p->certfp_sha1 = rb_strdup(parv[2]);
+	}
+
+	return 0;
+}
+

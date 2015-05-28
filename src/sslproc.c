@@ -401,26 +401,36 @@ ssl_process_certfp(ssl_ctl_t * ctl, ssl_ctl_buf_t * ctl_buf)
 {
 	struct Client *client_p;
 	int32_t fd;
-	int32_t len;
-	uint8_t *certfp;
+	uint8_t *certfp_sha1, *certfp_sha256;
 	char *certfp_string;
 	int i;
 
-	if(ctl_buf->buflen != 5 + RB_SSL_CERTFP_LEN)
+	if(ctl_buf->buflen != 5 + RB_SSL_CERTFP_METH_SHA1 + RB_SSL_CERTFP_METH_SHA256)
 		return;		/* bogus message..drop it.. XXX should warn here */
 
 	fd = buf_to_int32(&ctl_buf->buf[1]);
-	len = buf_to_int32(&ctl_buf->buf[5]);
-	certfp = (uint8_t *)&ctl_buf->buf[9];
+	certfp_sha1 = (uint8_t *)&ctl_buf->buf[5];
+	certfp_sha256 = (uint8_t *)&ctl_buf->buf[5 + RB_SSL_CERTFP_LEN_SHA1];
+
 	client_p = find_cli_fd_hash(fd);
 	if(client_p == NULL)
 		return;
-	rb_free(client_p->certfp);
-	certfp_string = rb_malloc(len * 2 + 1);
-	for(i = 0; i < len; i++)
+
+	rb_free(client_p->certfp_sha1);
+	rb_free(client_p->certfp_sha256);
+
+	certfp_string = rb_malloc(RB_SSL_CERTFP_LEN_SHA1 * 2 + 1);
+	for(i = 0; i < RB_SSL_CERTFP_LEN_SHA1; i++)
 		rb_snprintf(certfp_string + 2 * i, 3, "%02x",
-				certfp[i]);
-	client_p->certfp = certfp_string;
+				certfp_sha1[i]);
+
+	certfp_string = rb_malloc(RB_SSL_CERTFP_LEN_SHA256 * 2 + 1);
+	for(i = 0; i < RB_SSL_CERTFP_LEN_SHA256; i++)
+		rb_snprintf(certfp_string + 2 * i, 3, "%02x",
+				certfp_sha256[i]);
+
+	client_p->certfp_sha1 = certfp_string;
+	client_p->certfp_sha256 = certfp_string;
 }
 
 static void

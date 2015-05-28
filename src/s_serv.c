@@ -378,11 +378,9 @@ check_server(const char *name, struct Client *client_p)
 					continue;
 			}
 
-			if(tmp_p->certfp)
-			{
-				if(!client_p->certfp || strcasecmp(tmp_p->certfp, client_p->certfp) != 0)
-					continue;
-			}
+
+			if (check_client_certfp(client_p, tmp_p->certfp) != 0)
+				continue;
 
 			server_p = tmp_p;
 			break;
@@ -605,9 +603,13 @@ burst_TS6(struct Client *client_p)
 				   IsIPSpoof(target_p) ? "0" : target_p->sockhost,
 				   target_p->id, target_p->info);
 
-		if(!EmptyString(target_p->certfp))
+		if(!EmptyString(target_p->certfp_sha1))
 			sendto_one(client_p, ":%s ENCAP * CERTFP :%s",
-					use_id(target_p), target_p->certfp);
+					use_id(target_p), target_p->certfp_sha1);
+
+		if(!EmptyString(target_p->certfp_sha256))
+			sendto_one(client_p, ":%s ENCAP * ECERTFP SHA256 :%s",
+					use_id(target_p), target_p->certfp_sha256);
 
 		if(!IsCapable(client_p, CAP_EUID))
 		{

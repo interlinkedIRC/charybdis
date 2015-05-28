@@ -55,4 +55,6 @@ extern void construct_umodebuf(void);
 
 extern int oper_up(struct Client *, struct oper_conf *);
 
+extern int check_client_certfp(struct Client *, const char *);
+
 #endif

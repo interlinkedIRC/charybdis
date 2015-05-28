@@ -269,9 +269,9 @@ operator "god" {
 
 	/* fingerprint: if specified, the oper's client certificate
 	 * fingerprint will be checked against the specified fingerprint
-	 * below.
+	 * below. SHA1 and SHA256 are supported.
 	 */
-	#fingerprint = "c77106576abf7f9f90cca0f63874a60f2e40a64b";
+	#fingerprint = "6e63af57acbb73dbfa2b7eb107d9bebb1599c4036ae31e354011d2ad7c6b8052";
 
 	/* snomask: specific server notice mask on oper up.
 	 * If this is specified an oper will not be given oper_snomask.
@@ -303,7 +303,7 @@ connect "irc.uplink.com" {
 	class = "server";
 	flags = compressed, topicburst;
 
-	#fingerprint = "c77106576abf7f9f90cca0f63874a60f2e40a64b";
+	#fingerprint = "d3048071a01bd6a034ec2709cce53e437fc88bfd334f04174f92a67c143aa86c";
 
 	/* If the connection is IPv6, uncomment below.
 	 * Use 0::1, not ::1, for IPv6 localhost. */

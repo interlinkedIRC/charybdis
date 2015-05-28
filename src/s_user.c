@@ -633,10 +633,16 @@ introduce_client(struct Client *client_p, struct Client *source_p, struct User *
 		      IsIPSpoof(source_p) ? "0" : source_p->sockhost,
 		      source_p->id, source_p->info);
 
-	if(!EmptyString(source_p->certfp))
+	if(!EmptyString(source_p->certfp_sha1))
+		/* Use CERTFP for backwards compat reasons */
 		sendto_server(client_p, NULL, CAP_TS6, NOCAPS,
 				":%s ENCAP * CERTFP :%s",
-				use_id(source_p), source_p->certfp);
+				use_id(source_p), source_p->certfp_sha1);
+
+	if(!EmptyString(source_p->certfp_sha256))
+		sendto_server(client_p, NULL, CAP_TS6, NOCAPS,
+				":%s ENCAP * ECERTFP SHA256 :%s",
+				use_id(source_p), source_p->certfp_sha256);
 
 	if (IsDynSpoof(source_p))
 	{
@@ -1345,6 +1351,34 @@ oper_up(struct Client *source_p, struct oper_conf *oper_p)
 	send_oper_motd(source_p);
 
 	return (1);
+}
+
+/*
+ * check_client_certfp
+ *
+ * inputs	- certfp string, client to check
+ * outputs	- 1 on valid, 0 on invalid
+ * side effects	- NONE
+ */
+int
+check_client_certfp(struct Client *client_p, const char *certfp)
+{
+	if (certfp == NULL)
+	{
+		return 0;
+	}
+
+	if (strcasecmp(certfp, client_p->certfp_sha256) == 0)
+	{
+		return 1;
+	}
+
+	if(strcasecmp(certfp, client_p->certfp_sha1) == 0)
+	{
+		return 1;
+	}
+
+	return 0;
 }
 
 /*
